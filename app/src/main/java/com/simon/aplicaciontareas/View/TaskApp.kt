@@ -1,6 +1,7 @@
 package com.simon.aplicaciontareas.View
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -19,9 +20,10 @@ import com.simon.aplicaciontareas.TaskViewModel
 fun TaskApp(taskViewModel: TaskViewModel) {
     val tasks by taskViewModel.tareas.collectAsState()
 
-    var newTaskName by remember { mutableStateOf("") }
+    var nuevoNombreTarea by remember { mutableStateOf("") }
+    var nuevaDescripcionTarea by remember { mutableStateOf("") }
 
-    // Column para la UI
+    // Columna para la UI
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -30,34 +32,62 @@ fun TaskApp(taskViewModel: TaskViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         OutlinedTextField(
-            value = newTaskName,
-            onValueChange = { newTaskName = it },
-            label = { Text("New Task") },
+            value = nuevoNombreTarea,
+            onValueChange = { nuevoNombreTarea = it },
+            label = { Text("Nombre de la tarea") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = nuevaDescripcionTarea,
+            onValueChange = { nuevaDescripcionTarea = it },
+            label = { Text("Descripción de la tarea") },
             modifier = Modifier.fillMaxWidth()
         )
 
         Button(onClick = {
-            if (newTaskName.isNotBlank()) {
-                taskViewModel.agregarTarea(newTaskName)
-                newTaskName = ""
+            if (nuevoNombreTarea.isNotBlank() && nuevaDescripcionTarea.isNotBlank()) {
+                taskViewModel.agregarTarea(nuevoNombreTarea, nuevaDescripcionTarea)
+                nuevoNombreTarea = ""
+                nuevaDescripcionTarea = ""
             }
         }) {
-            Text("Add Task")
+            Text("Añadir tarea")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        tasks.forEach { task ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(task.name)
+        // Mostrar lista de tareas
+        Text("Lista de Tareas", style = MaterialTheme.typography.h6)
+        Spacer(modifier = Modifier.height(8.dp))
 
-                IconButton(onClick = { taskViewModel.eliminarTarea(task) }) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete Task")
+        // Mostrar tareas en una lista
+        Column(modifier = Modifier.fillMaxWidth()) {
+            tasks.forEach { tarea ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    elevation = 4.dp
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(tarea.name, style = MaterialTheme.typography.h6)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(tarea.description, style = MaterialTheme.typography.body1)
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            IconButton(onClick = { taskViewModel.eliminarTarea(tarea) }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Eliminar tarea")
+                            }
+                        }
+                    }
                 }
             }
         }

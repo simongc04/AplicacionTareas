@@ -22,9 +22,9 @@ class TaskViewModel(private val daoTareas: TaskDao) : ViewModel() {
         }
     }
 
-    fun agregarTarea(nombreTarea: String) {
+    fun agregarTarea(nombreTarea: String, descripcionTarea: String) {
         viewModelScope.launch {
-            val nuevaTarea = Task(name = nombreTarea)
+            val nuevaTarea = Task(name = nombreTarea, description = descripcionTarea)
             daoTareas.insert(nuevaTarea)
             cargarTareas()
         }
