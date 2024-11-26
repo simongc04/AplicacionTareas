@@ -36,4 +36,12 @@ class TaskViewModel(private val daoTareas: TaskDao) : ViewModel() {
             cargarTareas()
         }
     }
+
+    fun modificarTarea(tarea: Task) {
+        viewModelScope.launch {
+            daoTareas.update(tarea)
+            cargarTareas()
+        }
+    }
 }
+
