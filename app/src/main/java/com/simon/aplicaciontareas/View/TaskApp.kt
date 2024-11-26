@@ -23,7 +23,6 @@ fun TaskApp(taskViewModel: TaskViewModel) {
     var nuevoNombreTarea by remember { mutableStateOf("") }
     var nuevaDescripcionTarea by remember { mutableStateOf("") }
 
-    // Columna para la UI
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -59,11 +58,9 @@ fun TaskApp(taskViewModel: TaskViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Mostrar lista de tareas
-        Text("Lista de Tareas", style = MaterialTheme.typography.h6)
+        Text("Lista de Tareas", style = MaterialTheme.typography.h5)
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Mostrar tareas en una lista
         Column(modifier = Modifier.fillMaxWidth()) {
             tasks.forEach { tarea ->
                 Card(
@@ -73,9 +70,11 @@ fun TaskApp(taskViewModel: TaskViewModel) {
                     elevation = 4.dp
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(tarea.name, style = MaterialTheme.typography.h6)
+                        Text("Titulo Tarea", style = MaterialTheme.typography.h6)
+                        Text(tarea.name,)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(tarea.description, style = MaterialTheme.typography.body1)
+                        Text("Descrpicion" ,style = MaterialTheme.typography.h6)
+                        Text(tarea.description)
 
                         Row(
                             modifier = Modifier
