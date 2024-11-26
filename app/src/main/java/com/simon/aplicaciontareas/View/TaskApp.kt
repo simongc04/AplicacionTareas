@@ -1,5 +1,3 @@
-package com.simon.aplicaciontareas.View
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,11 +5,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +41,7 @@ fun TaskApp(taskViewModel: TaskViewModel) {
             label = { Text("Descripción de la tarea") },
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = {
             if (nuevoNombreTarea.isNotBlank() && nuevaDescripcionTarea.isNotBlank()) {
@@ -61,10 +55,9 @@ fun TaskApp(taskViewModel: TaskViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Lista de Tareas", style = MaterialTheme.typography.h5)
+        Text("Lista de Tareas", style = MaterialTheme.typography.h4)
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Usamos LazyColumn para renderizar las tareas de manera eficiente
         LazyColumn(modifier = Modifier.fillMaxWidth()) {
             items(tasks) { tarea ->
                 TareaCard(taskViewModel, tarea)
@@ -83,7 +76,6 @@ fun TareaCard(taskViewModel: TaskViewModel, tarea: Task) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
-        elevation = 4.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             if (isEditing) {
@@ -114,9 +106,9 @@ fun TareaCard(taskViewModel: TaskViewModel, tarea: Task) {
                     Text("Guardar cambios")
                 }
             } else {
-                Text("Título Tarea: ${tarea.name}", style = MaterialTheme.typography.h6)
+                Text("Tarea: ${tarea.name}", style = MaterialTheme.typography.h6)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Descripción: ${tarea.description}")
+                Text("Descripción: ${tarea.description}", style = MaterialTheme.typography.h6)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
