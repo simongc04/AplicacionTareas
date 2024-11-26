@@ -1,7 +1,8 @@
 package com.simon.aplicaciontareas.View
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -27,7 +28,7 @@ fun TaskApp(taskViewModel: TaskViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         OutlinedTextField(
@@ -61,8 +62,9 @@ fun TaskApp(taskViewModel: TaskViewModel) {
         Text("Lista de Tareas", style = MaterialTheme.typography.h5)
         Spacer(modifier = Modifier.height(8.dp))
 
-        Column(modifier = Modifier.fillMaxWidth()) {
-            tasks.forEach { tarea ->
+        // Usamos LazyColumn para renderizar las tareas de manera eficiente
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            items(tasks) { tarea -> // Se usa 'items' para crear la lista lazily
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -71,9 +73,9 @@ fun TaskApp(taskViewModel: TaskViewModel) {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Titulo Tarea", style = MaterialTheme.typography.h6)
-                        Text(tarea.name,)
+                        Text(tarea.name)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Descrpicion" ,style = MaterialTheme.typography.h6)
+                        Text("Descripción", style = MaterialTheme.typography.h6)
                         Text(tarea.description)
 
                         Row(
