@@ -3,45 +3,27 @@ package com.simon.aplicaciontareas
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.simon.aplicaciontareas.ui.theme.AplicacionTareasTheme
+import com.simon.aplicaciontareas.View.TaskApp
+import com.simon.aplicaciontareas.datos.AppDatabase
+
+
 
 class MainActivity : ComponentActivity() {
+
+    lateinit var database: AppDatabase
+
+    var taskViewModel: TaskViewModel? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        database = AppDatabase.getDatabase(applicationContext)
+
+        taskViewModel = TaskViewModel(database.taskDao())
         setContent {
-            AplicacionTareasTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            taskViewModel?.let {
+                TaskApp(it)
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AplicacionTareasTheme {
-        Greeting("Android")
     }
 }
