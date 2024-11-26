@@ -42,6 +42,18 @@ android {
 
 dependencies {
 
+    implementation(libs.material3)  // Reemplaza con la última versión de Material 3
+    implementation(libs.ui)  // Versión compatible de Compose
+    implementation(libs.androidx.foundation)  // Para Column, Row, etc.
+    implementation(libs.androidx.runtime.livedata)  // Si usas LiveData en tu ViewModel
+
+    dependencies {
+        implementation (libs.androidx.material3.v110 ) // o la última versión disponible
+        implementation (libs.androidx.ui.v150 ) // o la última versión
+    }
+
+
+
 
     implementation (libs.androidx.room.runtime)
     ksp (libs.androidx.room.compiler)
