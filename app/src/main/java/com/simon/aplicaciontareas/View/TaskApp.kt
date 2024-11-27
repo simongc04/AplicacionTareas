@@ -35,12 +35,7 @@ fun TaskApp(taskViewModel: TaskViewModel) {
             onValueChange = { nuevoNombreTarea = it },
             label = { Text("Nombre de la tarea") },
             modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFFF0000),
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = Color(0xFFFF0000),
-                unfocusedLabelColor = Color.Gray
-            )
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF0000))
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -50,16 +45,12 @@ fun TaskApp(taskViewModel: TaskViewModel) {
             onValueChange = { nuevaDescripcionTarea = it },
             label = { Text("Descripción de la tarea") },
             modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFFF0000),
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = Color(0xFFFF0000),
-                unfocusedLabelColor = Color.Gray
-            )
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF0000))
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Botón para añadir la tarea
         Button(
             onClick = {
                 if (nuevoNombreTarea.isNotBlank() && nuevaDescripcionTarea.isNotBlank()) {
@@ -75,13 +66,12 @@ fun TaskApp(taskViewModel: TaskViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Lista de tareas
         Text("Lista de Tareas", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn(modifier = Modifier.fillMaxWidth()) {
-            items(tasks) { tarea ->
-                TareaCard(taskViewModel, tarea)
-            }
+            items(tasks) { tarea -> TareaCard(taskViewModel, tarea) } // Mostrar cada tarea
         }
     }
 }
@@ -101,17 +91,13 @@ fun TareaCard(taskViewModel: TaskViewModel, tarea: Task) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             if (isEditing) {
+                // Mostrar campos para editar tarea
                 OutlinedTextField(
                     value = nuevoNombre,
                     onValueChange = { nuevoNombre = it },
                     label = { Text("Nuevo Título") },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFFF0000),
-                        unfocusedBorderColor = Color.Gray,
-                        focusedLabelColor = Color(0xFFFF0000),
-                        unfocusedLabelColor = Color.Gray
-                    )
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF0000))
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -121,16 +107,12 @@ fun TareaCard(taskViewModel: TaskViewModel, tarea: Task) {
                     onValueChange = { nuevaDescripcion = it },
                     label = { Text("Nueva Descripción") },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFFF0000),
-                        unfocusedBorderColor = Color.Gray,
-                        focusedLabelColor = Color(0xFFFF0000),
-                        unfocusedLabelColor = Color.Gray
-                    )
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF0000))
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Botón para guardar cambios
                 Button(
                     onClick = {
                         if (nuevoNombre.isNotBlank() && nuevaDescripcion.isNotBlank()) {
@@ -143,12 +125,14 @@ fun TareaCard(taskViewModel: TaskViewModel, tarea: Task) {
                     Text("Guardar cambios", color = Color.White)
                 }
             } else {
+                // Mostrar información de la tarea
                 Text("Tarea: ${tarea.name}", style = MaterialTheme.typography.headlineSmall)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Descripción: ${tarea.description}", style = MaterialTheme.typography.bodyLarge)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Botones para eliminar o editar tarea
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

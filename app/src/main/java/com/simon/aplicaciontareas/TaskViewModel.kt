@@ -13,9 +13,12 @@ class TaskViewModel(private val daoTareas: TaskDao) : ViewModel() {
     private val _tareas = MutableStateFlow<List<Task>>(emptyList())
     val tareas: StateFlow<List<Task>> get() = _tareas
 
+    // Estado para manejar los mensajes de error.
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> get() = _errorMessage
 
+
+    // se carga la lista de tareas al crear el ViewModel.
     init {
         cargarTareas()
     }
@@ -23,7 +26,7 @@ class TaskViewModel(private val daoTareas: TaskDao) : ViewModel() {
     private fun cargarTareas() {
         viewModelScope.launch {
             try {
-                _tareas.value = daoTareas.getAllTasks()
+                _tareas.value = daoTareas.getAllTasks() // Cargar todas las tareas
             } catch (e: Exception) {
                 Log.e("TaskViewModel", "Error al cargar tareas", e)
                 _errorMessage.value = "Error al cargar tareas: ${e.message}"
@@ -34,6 +37,7 @@ class TaskViewModel(private val daoTareas: TaskDao) : ViewModel() {
     fun agregarTarea(nombreTarea: String, descripcionTarea: String) {
         viewModelScope.launch {
             try {
+                // Crear una nueva tarea y agregarla al repositorio
                 val nuevaTarea = Task(name = nombreTarea, description = descripcionTarea)
                 daoTareas.insert(nuevaTarea)
                 cargarTareas()
