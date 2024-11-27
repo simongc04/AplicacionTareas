@@ -7,10 +7,14 @@ import com.simon.aplicaciontareas.datos.TaskDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class TaskViewModel(private val daoTareas: TaskDao) : ViewModel() {
     private val _tareas = MutableStateFlow<List<Task>>(emptyList())
     val tareas: StateFlow<List<Task>> get() = _tareas
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> get() = _errorMessage
 
     init {
         cargarTareas()
@@ -18,30 +22,49 @@ class TaskViewModel(private val daoTareas: TaskDao) : ViewModel() {
 
     private fun cargarTareas() {
         viewModelScope.launch {
-            _tareas.value = daoTareas.getAllTasks()
+            try {
+                _tareas.value = daoTareas.getAllTasks()
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Error al cargar tareas", e)
+                _errorMessage.value = "Error al cargar tareas: ${e.message}"
+            }
         }
     }
 
     fun agregarTarea(nombreTarea: String, descripcionTarea: String) {
         viewModelScope.launch {
-            val nuevaTarea = Task(name = nombreTarea, description = descripcionTarea)
-            daoTareas.insert(nuevaTarea)
-            cargarTareas()
+            try {
+                val nuevaTarea = Task(name = nombreTarea, description = descripcionTarea)
+                daoTareas.insert(nuevaTarea)
+                cargarTareas()
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Error al agregar tarea", e)
+                _errorMessage.value = "Error al agregar tarea: ${e.message}"
+            }
         }
     }
 
     fun eliminarTarea(tarea: Task) {
         viewModelScope.launch {
-            daoTareas.delete(tarea)
-            cargarTareas()
+            try {
+                daoTareas.delete(tarea)
+                cargarTareas()
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Error al eliminar tarea", e)
+                _errorMessage.value = "Error al eliminar tarea: ${e.message}"
+            }
         }
     }
 
     fun modificarTarea(tarea: Task) {
         viewModelScope.launch {
-            daoTareas.update(tarea)
-            cargarTareas()
+            try {
+                daoTareas.update(tarea)
+                cargarTareas()
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Error al modificar tarea", e)
+                _errorMessage.value = "Error al modificar tarea: ${e.message}"
+            }
         }
     }
 }
-
