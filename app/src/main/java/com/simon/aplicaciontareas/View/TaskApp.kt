@@ -10,142 +10,296 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.simon.aplicaciontareas.TaskViewModel
 import com.simon.aplicaciontareas.datos.Task
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 
 @Composable
-fun TaskApp(taskViewModel: TaskViewModel) {
-    val tasks by taskViewModel.tareas.collectAsState()
+fun TaskApp(database: AppDatabase) {
+    val taskDao = database.taskDao()
+    val tiposTareasDao = database.tiposTareasDao()
+    val scope = rememberCoroutineScope()
+    var tasks by remember { mutableStateOf(listOf<Task>()) }
+    var tipos_tareas by remember { mutableStateOf(listOf<TiposTareas>()) }
+    var newTaskName by remember { mutableStateOf("") }
+    var newTaskDescription by remember { mutableStateOf("") }
+    var selectedTaskType by remember { mutableStateOf<TiposTareas?>(null) }
+    var newTypeTaskName by remember { mutableStateOf("") }
+    var dropdownExpanded by remember { mutableStateOf(false) }
+    var editingTask by remember { mutableStateOf<Task?>(null) }
+    var editingTaskName by remember { mutableStateOf("") }
+    var editingTaskDescription by remember { mutableStateOf("") }
+    var editingTipoTarea by remember { mutableStateOf<TiposTareas?>(null) }
+    var editingTipoTareaName by remember { mutableStateOf("") }
 
-    var nuevoNombreTarea by remember { mutableStateOf("") }
-    var nuevaDescripcionTarea by remember { mutableStateOf("") }
+    // Cargar tareas y tipos de tareas al iniciar
+    LaunchedEffect(Unit) {
+        try {
+            tasks = taskDao.getAllTasks()
+            tipos_tareas = tiposTareasDao.getAllTiposTareas()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFF8B0000))
             .padding(16.dp),
-        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Añadir Tarea", color = Color(0xFFFF0000))
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = nuevoNombreTarea,
-            onValueChange = { nuevoNombreTarea = it },
-            label = { Text("Nombre de la tarea") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF0000))
+        // Tareas
+        Text(
+            text = "Tareas",
+            style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier
+                .padding(vertical = 2.dp)
+                .border(width = 1.dp, color = Color.Black, shape = CircleShape)
+                .background(color = Color.White, shape = CircleShape)
+                .padding(6.dp)
+                .padding(horizontal = 14.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
         OutlinedTextField(
-            value = nuevaDescripcionTarea,
-            onValueChange = { nuevaDescripcionTarea = it },
-            label = { Text("Descripción de la tarea") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF0000))
+            value = if (editingTask != null) editingTaskName else newTaskName,
+            onValueChange = {
+                if (editingTask != null) editingTaskName = it else newTaskName = it
+            },
+            label = { Text(if (editingTask != null) "Editar tarea" else "Nombre de la tarea") },
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
-        // Botón para añadir la tarea
+        OutlinedTextField(
+            value = if (editingTask != null) editingTaskDescription else newTaskDescription,
+            onValueChange = {
+                if (editingTask != null) editingTaskDescription = it else newTaskDescription = it
+            },
+            label = { Text(if (editingTask != null) "Editar descripción" else "Descripción de la tarea") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = { dropdownExpanded = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black) // Fondo negro
+            ) {
+                Text(text = selectedTaskType?.titulo ?: "Selecciona un tipo de tarea", color = Color.White)
+            }
+
+            DropdownMenu(
+                expanded = dropdownExpanded,
+                onDismissRequest = { dropdownExpanded = false }
+            ) {
+                tipos_tareas.forEach { tipo ->
+                    DropdownMenuItem(
+                        onClick = {
+                            selectedTaskType = tipo
+                            dropdownExpanded = false
+                        }
+                    ) {
+                        Text(text = tipo.titulo)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
         Button(
             onClick = {
-                if (nuevoNombreTarea.isNotBlank() && nuevaDescripcionTarea.isNotBlank()) {
-                    taskViewModel.agregarTarea(nuevoNombreTarea, nuevaDescripcionTarea)
-                    nuevoNombreTarea = ""
-                    nuevaDescripcionTarea = ""
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        if (editingTask != null) {
+                            editingTask?.let {
+                                it.titulo = editingTaskName
+                                it.descripcion = editingTaskDescription
+                                it.id_tipostareas = selectedTaskType?.id ?: it.id_tipostareas
+                                taskDao.update(it)
+                            }
+                            editingTask = null
+                            editingTaskName = ""
+                            editingTaskDescription = ""
+                            selectedTaskType = null
+                        } else if (newTaskName.isNotEmpty() && selectedTaskType != null) {
+                            val newTask = Task(
+                                id = 0,
+                                titulo = newTaskName,
+                                descripcion = newTaskDescription,
+                                id_tipostareas = selectedTaskType!!.id
+                            )
+                            taskDao.insert(newTask)
+                            newTaskName = ""
+                            newTaskDescription = ""
+                            selectedTaskType = null
+                        }
+                        tasks = taskDao.getAllTasks()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000))
+
+            modifier = Modifier
+
+                .fillMaxWidth()
+                .background(Color.Black), // Fondo negro
+
+            enabled = (editingTask != null || (selectedTaskType != null && newTaskName.isNotEmpty() && newTaskDescription.isNotEmpty()))
         ) {
-            Text("Añadir tarea", color = Color.White)
+            Text(if (editingTask != null) "Guardar cambios" else "Agregar tarea", color = Color.White)
+        }
+
+        tasks.forEach { task ->
+            val tipoTareaTitulo = tipos_tareas.find { it.id == task.id_tipostareas }?.titulo ?: "Desconocido"
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row {
+                    Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                        Text(text = " ${task.titulo}", style = MaterialTheme.typography.h6)
+                        Text(
+                            text = " ${task.descripcion}",
+                            style = MaterialTheme.typography.body1,
+                            color = Color.Black
+                        )
+                        Text(text = " $tipoTareaTitulo", style = MaterialTheme.typography.body2)
+                    }
+                }
+                Row {
+                    Button(onClick = {
+                        editingTask = task
+                        editingTaskName = task.titulo
+                        editingTaskDescription = task.descripcion
+                        selectedTaskType = tipos_tareas.find { it.id == task.id_tipostareas }
+                    }) { Icon(Icons.Default.Edit, contentDescription = "Editar") }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = {
+                        scope.launch(Dispatchers.IO) {
+                            try {
+                                taskDao.delete(task)
+                                tasks = taskDao.getAllTasks()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }) { Icon(Icons.Default.Close, contentDescription = "Eliminar") }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lista de tareas
-        Text("Lista de Tareas", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(8.dp))
+        // Tipos de tarea
+        Text(
+            text = "Tipos de tarea",
+            style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier
+                .padding(bottom = 2.dp)
+                .border(width = 1.dp, color = Color.Black, shape = CircleShape)
+                .background(color = Color.White, shape = CircleShape)
+                .padding(6.dp)
+                .padding(horizontal = 14.dp)
+        )
 
-        LazyColumn(modifier = Modifier.fillMaxWidth()) {
-            items(tasks) { tarea -> TareaCard(taskViewModel, tarea) } // Mostrar cada tarea
-        }
-    }
-}
+        OutlinedTextField(
+            value = if (editingTipoTarea != null) editingTipoTareaName else newTypeTaskName,
+            onValueChange = {
+                if (editingTipoTarea != null) editingTipoTareaName = it else newTypeTaskName = it
+            },
+            label = { Text(if (editingTipoTarea != null) "Editar tipo de tarea" else "Nombre del tipo") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
-@Composable
-fun TareaCard(taskViewModel: TaskViewModel, tarea: Task) {
-    var isEditing by remember { mutableStateOf(false) }
-    var nuevoNombre by remember { mutableStateOf(tarea.name) }
-    var nuevaDescripcion by remember { mutableStateOf(tarea.description) }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-        elevation = CardDefaults.elevatedCardElevation(10.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            if (isEditing) {
-                // Mostrar campos para editar tarea
-                OutlinedTextField(
-                    value = nuevoNombre,
-                    onValueChange = { nuevoNombre = it },
-                    label = { Text("Nuevo Título") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF0000))
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = nuevaDescripcion,
-                    onValueChange = { nuevaDescripcion = it },
-                    label = { Text("Nueva Descripción") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFF0000))
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Botón para guardar cambios
-                Button(
-                    onClick = {
-                        if (nuevoNombre.isNotBlank() && nuevaDescripcion.isNotBlank()) {
-                            taskViewModel.modificarTarea(tarea.copy(name = nuevoNombre, description = nuevaDescripcion))
-                            isEditing = false
+        Button(
+            onClick = {
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        var sameTitle = false
+                        tipos_tareas.forEach {
+                            if (it.titulo.lowercase() == newTypeTaskName.lowercase()) {
+                                sameTitle = true
+                            }
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000))
-                ) {
-                    Text("Guardar cambios", color = Color.White)
+                        if (editingTipoTarea != null) {
+                            editingTipoTarea?.let {
+                                it.titulo = editingTipoTareaName
+                                tiposTareasDao.update(it)
+                            }
+                            editingTipoTarea = null
+                            editingTipoTareaName = ""
+                        } else if (newTypeTaskName.isNotEmpty() && !sameTitle) {
+                            val newTypeTask = TiposTareas(titulo = newTypeTaskName)
+                            tiposTareasDao.insert(newTypeTask)
+                            newTypeTaskName = ""
+                        }
+                        tipos_tareas = tiposTareasDao.getAllTiposTareas()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
-            } else {
-                // Mostrar información de la tarea
-                Text("Tarea: ${tarea.name}", style = MaterialTheme.typography.headlineSmall)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Descripción: ${tarea.description}", style = MaterialTheme.typography.bodyLarge)
+            },
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .background(Color.Black), // Fondo negro
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black) // Fondo negro
 
-                Spacer(modifier = Modifier.height(8.dp))
+        ) {
+            Text(if (editingTipoTarea != null) "Guardar cambios" else "Agregar tipo de tarea", color = Color.White)
+        }
 
-                // Botones para eliminar o editar tarea
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    IconButton(onClick = { taskViewModel.eliminarTarea(tarea) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar tarea", tint = Color(0xFF0000FF))
-                    }
+        Spacer(modifier = Modifier.height(16.dp))
 
-                    IconButton(onClick = { isEditing = true }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar tarea", tint = Color(0xFFFF0000))
-                    }
+        tipos_tareas.forEach { tipo ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = tipo.titulo, style = MaterialTheme.typography.h6)
+                Row {
+                    Button(onClick = {
+                        editingTipoTarea = tipo
+                        editingTipoTareaName = tipo.titulo
+                    }) { Icon(Icons.Default.Edit, contentDescription = "Editar") }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = {
+                        scope.launch(Dispatchers.IO) {
+                            try {
+                                tiposTareasDao.delete(tipo)
+                                tipos_tareas = tiposTareasDao.getAllTiposTareas()
+                                tasks = taskDao.getAllTasks()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }) { Icon(Icons.Default.Close, contentDescription = "Eliminar") }
                 }
             }
         }
