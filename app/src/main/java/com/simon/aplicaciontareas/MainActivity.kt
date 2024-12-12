@@ -3,7 +3,6 @@ package com.simon.aplicaciontareas
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.simon.aplicaciontareas.View.TaskApp
 import com.simon.aplicaciontareas.datos.AppDatabase
 
 
